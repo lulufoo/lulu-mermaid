@@ -19,7 +19,6 @@ from urllib.request import ProxyHandler, build_opener, urlopen
 from drawer_ctl import paths
 from drawer_ctl import util
 from drawer_ctl import mermaid
-from drawer_ctl import board
 from drawer_ctl import document
 from drawer_ctl.migrate import migrate_document_envelopes
 
@@ -221,7 +220,7 @@ def sync_assets() -> None:
     vendor_dir = paths.asset_path().parent / "vendor"
     vendor_dest = paths.STATE_DIR / "vendor"
     vendor_dest.mkdir(parents=True, exist_ok=True)
-    for name in ("mermaid.min.js", "layout-elk.min.js", "board.min.js", "mermaid-themes.min.js", "flowchart.min.js", "mindmap.min.js", "state.min.js", "snapdom.mjs", "drawer-app.css", "drawer-app.js", "drawer-app-early-head.js", "drawer-app-early-hydrate.js", "drawer-app-mermaid-alias.js"):
+    for name in ("mermaid.min.js", "layout-elk.min.js", "mermaid-themes.min.js", "flowchart.min.js", "mindmap.min.js", "state.min.js", "snapdom.mjs", "drawer-app.css", "drawer-app.js", "drawer-app-early-head.js", "drawer-app-early-hydrate.js", "drawer-app-mermaid-alias.js"):
         src = vendor_dir / name
         if not src.is_file():
             raise RuntimeError(f"viewer vendor missing: {src}")
@@ -236,7 +235,6 @@ def run_serve(port: int) -> int:
 
     root = paths.STATE_DIR.resolve()
     root.mkdir(parents=True, exist_ok=True)
-    board.seed_default_board_if_empty()
     mermaid.seed_default_mermaid_if_empty()
     migrate_document_envelopes()
 
@@ -310,25 +308,6 @@ def run_serve(port: int) -> int:
             if path in ("/history.json", "/api/history"):
                 self._send_json(200, {"ok": True, "items": mermaid.list_mermaid_history()})
                 return
-            if path in ("/board-history.json", "/api/board-history"):
-                self._send_json(200, {"ok": True, "items": board.list_board_history()})
-                return
-            if path in ("/board.meta.json", "/api/board-meta"):
-                # Poll path: read only. Pointer migrate runs on mount/_serve start.
-                self._send_json(200, board.public_board_meta(board.read_board_meta()))
-                return
-            if path in ("/board.bmd", "/board.dsl", "/api/board"):
-                text = board.read_board_source_text().encode("utf-8")
-                meta = board.read_board_meta()
-                self.send_response(200)
-                self._cors()
-                self.send_header("Content-Type", "text/plain; charset=utf-8")
-                self.send_header("Content-Length", str(len(text)))
-                self.send_header("X-Board-Rev", str(meta["rev"]))
-                self.send_header("X-Board-Via", str(meta["via"]))
-                self.end_headers()
-                self.wfile.write(text)
-                return
             if path in ("/diagram.meta.json", "/api/meta"):
                 self._send_json(200, mermaid.public_diagram_meta(mermaid.read_meta()))
                 return
@@ -377,59 +356,8 @@ def run_serve(port: int) -> int:
                 dest = mermaid.write_export_png(body, self.headers.get("X-Export-Stem"))
                 self._send_json(200, {"ok": True, "path": str(dest)})
                 return
-            if path in ("/board.bmd", "/board.dsl", "/api/board"):
-                length = int(self.headers.get("Content-Length", "0") or 0)
-                if length < 0 or length > 2_000_000:
-                    self.send_error(400, "invalid body length")
-                    return
-                body = self.rfile.read(length)
-                try:
-                    text = body.decode("utf-8")
-                except UnicodeDecodeError:
-                    self.send_error(400, "body must be utf-8")
-                    return
-                via = self.headers.get("X-Board-Via") or "ui"
-                label = util.decode_header_value(self.headers.get("X-Board-Label")) or None
-                board_id = self.headers.get("X-Board-Id") or None
-                board_title = util.decode_header_value(self.headers.get("X-Board-Title")) or None
-                history_file = self.headers.get("X-Board-History-File") or None
-                if not text.strip() and not (via == "history" and history_file):
-                    self.send_error(400, "board source must not be empty")
-                    return
-                arch_hdr = self.headers.get("X-Board-Archive")
-                if arch_hdr is None or str(arch_hdr).strip() == "":
-                    do_archive = via not in ("ui", "history")
-                else:
-                    do_archive = str(arch_hdr).strip().lower() not in ("0", "false", "no", "off")
-                base_raw = self.headers.get("X-Board-Rev")
-                base_rev = None
-                if base_raw not in (None, ""):
-                    try:
-                        base_rev = int(base_raw)
-                    except ValueError:
-                        self.send_error(400, "X-Board-Rev must be int")
-                        return
-                meta, conflict_text = board.commit_board_source(
-                    text,
-                    via=via,
-                    base_rev=base_rev,
-                    label=label,
-                    board_id=board_id,
-                    title=board_title,
-                    history_file=history_file,
-                    archive=do_archive,
-                )
-                if conflict_text is not None:
-                    self._send_json(409, {"ok": False, "error": "board_rev_conflict", "rev": meta["rev"], "version": meta.get("version", meta["rev"]), "via": meta["via"], "source": conflict_text})
-                    return
-                self.send_response(204)
-                self._cors()
-                self.send_header("X-Board-Rev", str(meta["rev"]))
-                self.send_header("X-Board-Via", str(meta["via"]))
-                self.end_headers()
-                return
             if path not in ("/diagram.mmd", "/api/source"):
-                self.send_error(404, "only diagram.mmd or board.bmd is writable")
+                self.send_error(404, "only diagram.mmd is writable")
                 return
             length = int(self.headers.get("Content-Length", "0") or 0)
             if length < 0 or length > 2_000_000:
@@ -497,29 +425,13 @@ def run_serve(port: int) -> int:
 
         def do_DELETE(self) -> None:  # noqa: N802
             path = self.path.split("?", 1)[0]
-            # Board: /api/board-history/<name.bmd>
-            for p in ("/api/board-history/", "/board-history/"):
-                if path.startswith(p):
-                    name = path[len(p):]
-                    if not name or "/" in name or ".." in name:
-                        self.send_error(400, "invalid history name")
-                        return
-                    if not board.delete_board_history(name):
-                        self.send_error(404, "history entry not found")
-                        return
-                    raw = Path(name).name
-                    if not raw.endswith(".bmd"):
-                        raw = f"{raw}.bmd"
-                    self._send_json(200, {"ok": True, "deleted": raw})
-                    return
-            # Mermaid: /api/history/<name.mmd> or /history/<name.mmd>
             prefix = None
             for p in ("/api/history/", "/history/"):
                 if path.startswith(p):
                     prefix = p
                     break
             if prefix is None:
-                self.send_error(404, "only /api/history/<file> or /api/board-history/<file> is deletable")
+                self.send_error(404, "only /api/history/<file> is deletable")
                 return
             name = path[len(prefix):]
             if not name or "/" in name or ".." in name:

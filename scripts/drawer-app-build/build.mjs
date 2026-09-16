@@ -59,7 +59,6 @@ const domain = [
   '00-document-meta.js',
   '00-canvas-view.js',
   '01-shell-state.js',
-  '02-board.js',
   '03-mermaid-inspect.js',
   '03-mermaid.js',
   '04-mindmap.js',

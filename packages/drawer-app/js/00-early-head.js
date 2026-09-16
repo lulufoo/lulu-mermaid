@@ -5,8 +5,7 @@
   try {
     var q = new URLSearchParams(location.search).get('mode');
     var parsed = JSON.parse(localStorage.getItem('drawer.ui') || 'null');
-    if (q === 'board' || q === 'mermaid') mode = q;
-    else if (parsed && (parsed.mode === 'board' || parsed.mode === 'mermaid')) mode = parsed.mode;
+    if (q === 'mermaid' || (parsed && parsed.mode === 'mermaid')) mode = 'mermaid';
     if (parsed && parsed.diagramType) diagramType = String(parsed.diagramType);
   } catch (e) {}
   document.documentElement.dataset.drawerMode = mode;

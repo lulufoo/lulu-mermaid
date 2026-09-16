@@ -64,12 +64,6 @@ def new_diagram_id() -> str:
     return "m_" + secrets.token_hex(4)
 
 
-def new_board_id() -> str:
-    """Short stable Board diagram id (history + live meta)."""
-    import secrets
-    return "b_" + secrets.token_hex(4)
-
-
 def write_text_atomic(path: Path, text: str) -> None:
     """Write UTF-8 through to the real file (follows symlink targets)."""
     real = path.expanduser()

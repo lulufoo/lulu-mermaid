@@ -17,6 +17,7 @@ from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "skill" / "scripts"))
 
 import drawer_control as dc
+from drawer_ctl import commands as _commands
 from drawer_ctl import paths as _ctl_paths
 from document_meta import join_document, split_document
 
@@ -42,7 +43,7 @@ class MermaidSourceIdTest(unittest.TestCase):
     def _preview(self, path=None, stdin=None, source_id=None) -> dict:
         buf = io.StringIO()
         with (
-            patch.object(dc, "mount", return_value="http://127.0.0.1:9/drawer.html"),
+            patch.object(_commands, "mount", return_value="http://127.0.0.1:9/drawer.html"),
             patch.object(dc, "open_viewer", return_value="none"),
             patch.object(sys, "stdin", stdin or _Tty()),
             redirect_stdout(buf),
