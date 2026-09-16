@@ -49,7 +49,7 @@ $DRAWER_CTL stop
 
 ## Mermaid identity + current pointer
 
-`history/mermaid/*.mmd` (+ `.json` sidecar) are editable records. **MMD ID** (`m_…`) is which diagram. **MMD Source** is the body. `diagram.meta.json` `current` points at the viewed record. UI edits write through `current` (no new record). Only `preview` / `set-source` creates a record and retargets. History click only switches `current`.
+`history/*.mmd` (+ `.json` sidecar) are editable records. **MMD ID** (`m_…`) is which diagram. **MMD Source** is the body. `diagram.meta.json` `current` points at the viewed record. UI edits write through `current` (no new record). Only `preview` / `set-source` creates a record and retargets. History click only switches `current`.
 
 | Term | Meaning |
 |---|---|
@@ -67,7 +67,7 @@ $DRAWER_CTL status
 $DRAWER_CTL get-source --kind mermaid --id m_…
 ```
 
-On start, if `history/mermaid` has no `*.mmd`, Drawer seeds every packed
+On start, if `history` has no `*.mmd`, Drawer seeds every packed
 flat file under `../assets/templates/mermaid/*.mmd` (from repo `examples/mermaid-*`, no PNGs)
 and points `current` at checkout when present.
 `preview` with no file and no stdin body does not create a record. With a body,

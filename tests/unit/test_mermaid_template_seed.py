@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Empty history/mermaid is seeded from skill/assets/templates/mermaid packed examples."""
+"""Empty history/ is seeded from skill/assets/templates/mermaid packed examples."""
 from __future__ import annotations
 
 import shutil
@@ -44,6 +44,53 @@ class MermaidTemplateSeedTest(unittest.TestCase):
         self.assertIsNone(again)
         names = list(_ctl_paths.history_dir().glob("*.mmd"))
         self.assertEqual(len(names), 1)
+
+    def test_lifts_nested_history_mermaid(self) -> None:
+        nested = self.tmp / "history" / "mermaid"
+        nested.mkdir(parents=True)
+        rec = nested / "20260101-000000-x.mmd"
+        rec.write_text("flowchart TD\n  A-->B\n", encoding="utf-8")
+        (nested / "20260101-000000-x.json").write_text("{}\n", encoding="utf-8")
+        mermaid_mod.write_meta(
+            {
+                "rev": 1,
+                "updated_at": 1,
+                "via": "test",
+                "kind": "flowchart",
+                "current": "history/mermaid/20260101-000000-x.mmd",
+            }
+        )
+        from drawer_ctl.migrate import migrate_document_envelopes
+
+        migrate_document_envelopes()
+        self.assertTrue((self.tmp / "history" / "20260101-000000-x.mmd").is_file())
+        self.assertFalse((self.tmp / "history" / "mermaid").exists())
+        self.assertEqual(
+            mermaid_mod.read_meta_raw()["current"],
+            "history/20260101-000000-x.mmd",
+        )
+
+    def test_seed_lifts_nested_before_treating_empty(self) -> None:
+        nested = self.tmp / "history" / "mermaid"
+        nested.mkdir(parents=True)
+        rec = nested / "20260101-000000-x.mmd"
+        rec.write_text("flowchart TD\n  A-->B\n", encoding="utf-8")
+        mermaid_mod.write_meta(
+            {
+                "rev": 1,
+                "updated_at": 1,
+                "via": "test",
+                "kind": "flowchart",
+                "current": "history/mermaid/20260101-000000-x.mmd",
+            }
+        )
+        self.assertIsNone(mermaid_mod.seed_default_mermaid_if_empty())
+        names = [p.name for p in _ctl_paths.history_dir().glob("*.mmd")]
+        self.assertEqual(names, ["20260101-000000-x.mmd"])
+        self.assertEqual(
+            mermaid_mod.read_meta_raw()["current"],
+            "history/20260101-000000-x.mmd",
+        )
 
 
 if __name__ == "__main__":

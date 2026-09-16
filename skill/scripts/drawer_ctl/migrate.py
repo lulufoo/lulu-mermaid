@@ -7,8 +7,40 @@ from drawer_ctl import util
 from drawer_ctl import document
 from drawer_ctl import mermaid
 
+def lift_nested_mermaid_history() -> int:
+    """Move history/mermaid/* up to history/ and rewrite meta.current."""
+    dest = paths.history_root()
+    nested = dest / "mermaid"
+    if not nested.is_dir():
+        return 0
+    moved = 0
+    for src in nested.iterdir():
+        if not src.is_file():
+            continue
+        target = dest / src.name
+        if target.exists():
+            continue
+        src.replace(target)
+        moved += 1
+    meta = mermaid.read_meta_raw()
+    cur = str(meta.get("current") or meta.get("archive") or "")
+    prefix = "history/mermaid/"
+    if cur.startswith(prefix):
+        meta["current"] = "history/" + cur[len(prefix) :]
+        mermaid.write_meta(meta)
+        mermaid.refresh_diagram_mmd_alias(mermaid.mermaid_record_path_from_meta(meta))
+    try:
+        next(nested.iterdir())
+    except StopIteration:
+        nested.rmdir()
+    except OSError:
+        pass
+    return moved
+
+
 def migrate_document_envelopes() -> dict:
     """One-shot: canonicalize envelope tokens; mint when a record has none."""
+    lift_nested_mermaid_history()
     n_mermaid = 0
     for mmd in paths.mermaid_history_records():
         try:

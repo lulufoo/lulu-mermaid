@@ -749,7 +749,7 @@ function applyLiveMeta(meta = {}) {
   if (meta && meta.id) liveDiagramId = String(meta.id);
   if (meta && meta.title) liveDiagramTitle = String(meta.title);
   if (meta && meta.via) liveDiagramVia = String(meta.via);
-  // Protocol: meta.current → history/mermaid record. Legacy archive treated as current.
+  // Protocol: meta.current → history record. Legacy archive treated as current.
   var curPath = "";
   if (meta && meta.current) curPath = String(meta.current);
   else if (meta && meta.archive) curPath = String(meta.archive);

@@ -10,7 +10,6 @@ SOURCE_FILE = "diagram.mmd"
 META_FILE = "diagram.meta.json"
 VIEWER_FILE = "drawer.html"
 HISTORY_DIR_NAME = "history"
-MERMAID_HISTORY_NAME = "mermaid"
 EXPORT_DIR_NAME = "export"
 HISTORY_SOURCE_READ_CAP = 256_000
 
@@ -57,9 +56,7 @@ def history_root() -> Path:
 
 
 def history_dir() -> Path:
-    d = history_root() / MERMAID_HISTORY_NAME
-    d.mkdir(parents=True, exist_ok=True)
-    return d
+    return history_root()
 
 
 def meta_path() -> Path:

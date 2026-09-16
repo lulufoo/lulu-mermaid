@@ -46,7 +46,7 @@ def create_mermaid_record(
     diagram_id: str | None = None,
     title: str | None = None,
 ) -> Path:
-    """Create a new history/mermaid record (+ sidecar). Editable SSOT entry."""
+    """Create a new history record (+ sidecar). Editable SSOT entry."""
     ts = datetime.now().strftime("%Y%m%d-%H%M%S")
     dtitle = (title or "").strip() or titles.derive_diagram_title(text, label)
     stem = util.sanitize_stem(label or dtitle)
@@ -180,7 +180,7 @@ def mermaid_record_path_from_meta(meta: dict | None = None) -> Path | None:
 
 
 def find_mermaid_record_by_id(diagram_id: str) -> Path | None:
-    """Newest matching history/mermaid record for a stable m_… id, or None."""
+    """Newest matching history record for a stable m_… id, or None."""
     want = str(diagram_id or "").strip()
     if not want:
         return None
@@ -314,10 +314,11 @@ def mermaid_history_has_records() -> bool:
 
 
 def seed_default_mermaid_if_empty() -> Path | None:
-    """If history/mermaid is empty, seed every packed example under assets/templates/mermaid.
+    """If history/ is empty, seed every packed example under assets/templates/mermaid.
 
     Points current at mermaid-state/checkout when present.
     """
+    __import__("drawer_ctl.migrate", fromlist=["lift_nested_mermaid_history"]).lift_nested_mermaid_history()
     if mermaid_history_has_records():
         return None
     live = paths.source_path()
@@ -586,7 +587,7 @@ def commit_source(
 ) -> tuple[dict, str | None]:
     """Mermaid SSOT protocol (same as Board):
 
-    - history/mermaid/*.mmd are editable records.
+    - history/*.mmd are editable records.
     - meta.current points at the active record; UI writes through (archive=False).
     - CLI without diagram_id mints a new record and retargets.
     - CLI with diagram_id writes that record in place and retargets.
