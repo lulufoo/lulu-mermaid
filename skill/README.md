@@ -5,7 +5,7 @@ Install / publish **this folder only**.
 | Path | Role |
 |---|---|
 | `SKILL.md` | Agent entry (Mermaid) |
-| `mermaid/` `drawer/` | Mode skills |
+| `mermaid/` | Mode skill (`/mermaid`). Viewer notes: `mermaid/references/viewer.md` |
 | `assets/` | Built Drawer viewer (`drawer.html` + `vendor/*.min.js`) |
 | `scripts/` | Runtime CLI (`drawer_control.py` + helpers) |
 

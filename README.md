@@ -48,7 +48,7 @@ Ship **`skill/`** only:
 ```text
 skill/
   SKILL.md                 # agent entry
-  mermaid/ drawer/         # mode skills
+  mermaid/                 # /mermaid skill (+ references/viewer.md)
   assets/                  # viewer + History templates
   scripts/                 # drawer_control CLI
 ```

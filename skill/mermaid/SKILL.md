@@ -30,6 +30,7 @@ Load only what the current interface needs.
 1. Keep this file at start.
 2. **list** — load [catalog](./references/catalog.md) only.
 3. **route** — after the type is chosen, load that one file from catalog.
+4. Load [viewer](./references/viewer.md) for `mount` / `status` / `stop` or the pointer protocol.
 
 ## Interfaces
 
@@ -78,7 +79,7 @@ and stopped.
 
 1. Types come from catalog only. Do not invent a diagram kind.
 2. Samples stay in `references/`. Do not copy them here.
-3. Preview rules live in sibling `drawer`. Not Board. Not Workbench whiteboard.
+3. Preview rules live in [viewer](./references/viewer.md). Not Board. Not Workbench whiteboard.
 4. Always resolve the live diagram via `status` MMD ID before acting. Do not
    edit from memory of an earlier preview.
 5. History restore must keep the snapshot's MMD ID / `title` and must **not**

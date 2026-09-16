@@ -12,7 +12,7 @@ This directory is the **skill install root**. Install / publish **only** this fo
 |---|---|---|---|---|
 | Mermaid | **Lulu Mermaid** | MMD ID (`m_…`) | MMD Source | `mermaid/` |
 
-CLI: `$DRAWER_CTL` → `python3 scripts/drawer_control.py` (see `drawer/`).
+CLI: `$DRAWER_CTL` → `python3 scripts/drawer_control.py` (see `mermaid/references/viewer.md`).
 
 Runtime assets: `assets/` (built from the monorepo; synced to `~/.cache/mermaid` on preview).
 
