@@ -60,7 +60,7 @@ def parser():
     get_p = commands.add_parser("get-source", help="print MMD Source for --id")
     get_p.add_argument("--kind", choices=["mermaid"], default="mermaid", help="which live source to print")
     get_p.add_argument("--id", dest="source_id", help="MMD ID (m_…); required")
-    serve_p = commands.add_parser("_serve", help=argparse.SUPPRESS)
+    serve_p = commands.add_parser(SERVE_COMMAND, help=argparse.SUPPRESS)
     serve_p.add_argument("--port", type=int, default=0)
     return p
 
@@ -105,7 +105,7 @@ def main(argv=None) -> int:
                 kind=getattr(args, "kind", "mermaid"),
                 source_id=getattr(args, "source_id", None),
             )
-        elif args.command == "_serve":
+        elif args.command == SERVE_COMMAND:
             return run_serve(resolve_port(args.port))
         return 0
     except Exception as exc:
